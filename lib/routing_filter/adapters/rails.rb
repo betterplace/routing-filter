@@ -1,6 +1,7 @@
 require 'action_dispatch'
 require 'active_support/core_ext/module/aliasing'
 require 'active_support/core_ext/hash/reverse_merge'
+require 'routing_filter/result_wrapper'
 
 mappers = [ActionDispatch::Routing::Mapper]
 mappers << ActionDispatch::Routing::DeprecatedMapper if defined?(ActionDispatch::Routing::DeprecatedMapper)
@@ -27,8 +28,8 @@ module ActionDispatchRoutingRouteSetWithFiltering
 
     # `around_generate` is destructive method and it breaks url. To avoid this, `dup` is required.
     filters.run(:around_generate, options, &lambda{
-      super(route_key, options, recall).map(&:dup)
-    })
+      RoutingFilter::ResultWrapper.current.new(super(route_key, options, recall))
+    }).generate
   end
 
   def clear!
